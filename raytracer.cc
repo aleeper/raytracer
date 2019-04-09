@@ -41,11 +41,11 @@ int main() {
   constexpr int kCount = 4;
   Hitable* list[kCount];
   list[0] = new Sphere(Vec3f(0.f, 0.f, -1.0f), 0.5,
-                       new Lambertian(Vec3f(0.8f, 0.3f, 0.3f)));
+                       new Lambertian(Vec3f(0.1f, 0.2f, 0.5f)));
   list[1] = new Sphere(Vec3f(1.f, 0.f, -1.0f), 0.5,
                        new Metal(Vec3f(0.8f, 0.6f, 0.2f), 0.0f));
   list[2] = new Sphere(Vec3f(-1.f, 0.f, -1.0f), 0.5,
-                       new Metal(Vec3f(0.8f, 0.8f, 0.8f), 0.4f));
+                       new Dielectric(1.5, 0.0f));
   list[3] = new Sphere(Vec3f(0.f, -100.5f, -1.f), 100,
                        new Lambertian(Vec3f(0.8f, 0.8f, 0.f)));
   

@@ -16,5 +16,17 @@ Vec3f Reflect(const Vec3f& direction, const Vec3f& normal) {
   return direction - 2.0 * direction.dot(normal) * normal;
 }
 
+bool Refract(const Vec3f& direction, const Vec3f& normal, float ni_over_nt,
+              Vec3f* refracted) {
+  Vec3f unit_direction = direction.normalized();
+  float dot = unit_direction.dot(normal);
+  float discriminant = 1.0 - ni_over_nt * ni_over_nt * (1 - dot * dot);
+  if (discriminant > 0) {
+    *refracted = ni_over_nt * (unit_direction - normal * dot)
+        - normal * std::sqrt(discriminant);
+    return true;
+  }
+  return false;
+}
 
 #endif // UTIL_H_

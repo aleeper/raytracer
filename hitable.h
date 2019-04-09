@@ -8,6 +8,7 @@ struct HitResult {
   using Vec3f = Eigen::Vector3f;
   float t;
   Vec3f point;
+  // By convention, always unit length.
   Vec3f normal;
   Material* material;
 };
