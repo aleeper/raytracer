@@ -58,26 +58,33 @@ class Dielectric : public Material {
   bool Scatter(const Ray& ray_in, const HitResult& hit,
                        Vec3f* attenuation, Ray* scattered_ray) const override {
     float ni_over_nt;
+    float cosine;
     Vec3f outward_normal;
     if (ray_in.direction().dot(hit.normal) > 0) {
       outward_normal = -hit.normal;
       ni_over_nt = refractive_index_;
+      cosine = refractive_index_ * ray_in.direction().dot(hit.normal) / ray_in.direction().norm();
     } else {
       outward_normal = hit.normal;
       ni_over_nt = 1.0 / refractive_index_;
+      cosine = -ray_in.direction().dot(hit.normal) / ray_in.direction().norm();
     }
 
+    Vec3f refracted_direction;
+    bool did_refract = Refract(ray_in.direction(), outward_normal, ni_over_nt,
+                               &refracted_direction);    
+    float reflect_probability = did_refract ?
+        ComputeSchlick(cosine, refractive_index_) : 1.0f;
+      
     *attenuation = Vec3f(1.0, 1.0, 1.0);
-    // TODO is normalization the bug?
-    Vec3f reflected = Reflect(ray_in.direction(), hit.normal);
-    Vec3f refracted;
-    if (Refract(ray_in.direction(), outward_normal, ni_over_nt, &refracted)) {
-      *scattered_ray = Ray(hit.point, refracted);
-      return true;
+    
+    if (drand48() < reflect_probability) {
+      Vec3f reflected_direction = Reflect(ray_in.direction(), hit.normal);
+      *scattered_ray = Ray(hit.point, reflected_direction);
     } else {
-      *scattered_ray = Ray(hit.point, reflected);
-      return false;
+      *scattered_ray = Ray(hit.point, refracted_direction);
     }
+    return true;
   }
 
  float refractive_index_;

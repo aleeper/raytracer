@@ -38,16 +38,14 @@ int main() {
   Camera camera;
   
   //TODO memory!
-  constexpr int kCount = 4;
+  constexpr int kCount = 5;
   Hitable* list[kCount];
-  list[0] = new Sphere(Vec3f(0.f, 0.f, -1.0f), 0.5,
-                       new Lambertian(Vec3f(0.1f, 0.2f, 0.5f)));
-  list[1] = new Sphere(Vec3f(1.f, 0.f, -1.0f), 0.5,
-                       new Metal(Vec3f(0.8f, 0.6f, 0.2f), 0.0f));
-  list[2] = new Sphere(Vec3f(-1.f, 0.f, -1.0f), 0.5,
-                       new Dielectric(1.5, 0.0f));
-  list[3] = new Sphere(Vec3f(0.f, -100.5f, -1.f), 100,
-                       new Lambertian(Vec3f(0.8f, 0.8f, 0.f)));
+  list[0] = new Sphere(Vec3f(0.f, 0.f, -1.0f),    0.5, new Lambertian(Vec3f(0.1f, 0.2f, 0.5f)));
+  list[1] = new Sphere(Vec3f(0.f, -100.5f, -1.f), 100, new Lambertian(Vec3f(0.8f, 0.8f, 0.f)));
+  list[2] = new Sphere(Vec3f(1.f, 0.f, -1.0f),    0.5, new Metal(Vec3f(0.8f, 0.6f, 0.2f), 0.0f));
+  list[3] = new Sphere(Vec3f(-1.f, 0.f, -1.0f),   0.5, new Dielectric(1.5, 0.0f));
+  list[4] = new Sphere(Vec3f(-1.f, 0.f, -1.0f),  -0.45, new Dielectric(1.5, 0.0f));
+  
   
   Hitable* world = new HitableList(list, kCount);
 

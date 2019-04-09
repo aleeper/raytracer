@@ -29,4 +29,10 @@ bool Refract(const Vec3f& direction, const Vec3f& normal, float ni_over_nt,
   return false;
 }
 
+float ComputeSchlick(float cosine, float refractive_index) {
+  float r0 = (1 - refractive_index) / (1 + refractive_index);
+  r0 = r0 * r0;
+  return r0 + (1 - r0) * std::pow((1 - cosine), 5);
+}
+
 #endif // UTIL_H_
