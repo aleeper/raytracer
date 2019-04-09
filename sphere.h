@@ -35,16 +35,23 @@ class Sphere : public Hitable {
   using Vec3f = Eigen::Vector3f;
  public:
   Sphere() {}
-  Sphere(Vec3f center, float radius) : center_(center), radius_(radius) {}
+  Sphere(Vec3f center, float radius, Material* material)
+      : center_(center), radius_(radius), material_(material) {}
   bool ComputeHit(const Ray& ray, float t_min, float t_max, HitResult* result)
       const override;
  private:
   Vec3f center_;
   float radius_;
+  Material* material_;
 };
 
 bool Sphere::ComputeHit(
     const Ray& ray, float t_min, float t_max, HitResult* result) const {
-  return ComputeSphereHit(ray, t_min, t_max, center_, radius_, result);
+  if (ComputeSphereHit(ray, t_min, t_max, center_, radius_, result)) {
+    result->material = material_;
+    return true;
+  } else {
+    return false;
+  }
 }
 #endif // SPHERE_H_
