@@ -34,9 +34,11 @@ Vec3f GetColor(const Ray& ray, Hitable* world, int depth) {
 int main() {
   int nx = 400;
   int ny = 200;
-  int ns = 200;
-  Camera camera(90, float(nx) / float(ny));
-  camera.SetLook(Vec3f(-1, 1, 0), Vec3f(0, 0, -1), Vec3f(0, 1, 0));
+  int ns = 100;
+  Vec3f look_from(-1, 1, 0), look_to(0, 0, -1), look_up(0, 1, 0);
+  float focus_distance = (look_from - look_to).norm();
+  Camera camera(90, float(nx) / float(ny), 0.2, focus_distance);
+  camera.SetLook(look_from, look_to, look_up);
   // camera.SetLook(Vec3f(0, 0, 0), Vec3f(0, 0, -1), Vec3f(0, 1, 0));
   
   //TODO memory!
