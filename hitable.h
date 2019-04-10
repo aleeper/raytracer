@@ -15,6 +15,7 @@ struct HitResult {
 
 class Hitable {
  public:
+  virtual ~Hitable() {};
   virtual bool ComputeHit(
       const Ray& ray, float t_min, float t_max, HitResult* result) const = 0;
 };
@@ -22,11 +23,16 @@ class Hitable {
 class HitableList : public Hitable {
  public:
   HitableList() {}
-  HitableList(Hitable** list, int n) : list_(list), list_size_(n) {}
+  ~HitableList() {
+    for (Hitable* hitable : list_) {
+      delete hitable;
+    }
+  }
+  // Takes ownership of the elements of vector.
+  HitableList(const std::vector<Hitable*>& list) : list_(std::move(list)) {}
   bool ComputeHit(const Ray& ray, float t_min, float t_max, HitResult* result)
       const override;
-  Hitable **list_;
-  int list_size_;
+  std::vector<Hitable*> list_;
 };
 
 bool HitableList::ComputeHit(const Ray& ray, float t_min, float t_max,
@@ -34,7 +40,7 @@ bool HitableList::ComputeHit(const Ray& ray, float t_min, float t_max,
   HitResult temp_result;
   bool hit_anything = false;
   float closest_so_far = t_max;
-  for (int i = 0; i < list_size_; ++i) {
+  for (int i = 0; i < list_.size(); ++i) {
     if (list_[i]->ComputeHit(ray, t_min, closest_so_far, &temp_result)) {
       hit_anything = true;
       closest_so_far = temp_result.t;
