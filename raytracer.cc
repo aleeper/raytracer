@@ -35,7 +35,7 @@ int main() {
   int nx = 200;
   int ny = 100;
   int ns = 100;
-  Camera camera;
+  Camera camera(90, float(nx) / float(ny));
   
   //TODO memory!
   constexpr int kCount = 5;

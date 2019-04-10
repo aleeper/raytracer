@@ -7,11 +7,14 @@
 class Camera {
   using Vec3f = Eigen::Vector3f;
  public:
-  Camera () {
+  Camera (float vfov_degrees, float aspect) {
+    float theta = vfov_degrees * M_PI / 180.0;
+    float half_height = std::tan(theta / 2);
+    float half_width = aspect * half_height;
     origin = Vec3f(0.f, 0.f, 0.f);
-    lower_left_corner = Vec3f(-2.f, -1.f, -1.f);
-    horizontal = Vec3f(4.f, 0.f, 0.f);
-    vertical = Vec3f(0.f, 2.f, 0.f);
+    lower_left_corner = Vec3f(-half_width, -half_height, -1.f);
+    horizontal = Vec3f(2 * half_width, 0.f, 0.f);
+    vertical = Vec3f(0.f, 2 * half_height, 0.f);
   }
   
   Ray GetRay(float u, float v) const {
