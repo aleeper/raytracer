@@ -32,10 +32,12 @@ Vec3f GetColor(const Ray& ray, Hitable* world, int depth) {
 }
 
 int main() {
-  int nx = 200;
-  int ny = 100;
-  int ns = 100;
+  int nx = 400;
+  int ny = 200;
+  int ns = 200;
   Camera camera(90, float(nx) / float(ny));
+  camera.SetLook(Vec3f(-1, 1, 0), Vec3f(0, 0, -1), Vec3f(0, 1, 0));
+  // camera.SetLook(Vec3f(0, 0, 0), Vec3f(0, 0, -1), Vec3f(0, 1, 0));
   
   //TODO memory!
   constexpr int kCount = 5;
