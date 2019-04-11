@@ -1,6 +1,8 @@
 #include <iostream>
+#include <fstream>
 #include <random>
 #include <memory>
+#include <omp.h>
 
 #include <Eigen/Core>
 #include "camera.h"
@@ -24,6 +26,43 @@ std::unique_ptr<Hitable> GetBasicScene() {
   return std::unique_ptr<Hitable>(new HitableList(list));
 }
 
+std::unique_ptr<Hitable> GetDemoScene(int range) {
+  constexpr int n = 500;
+  std::vector<Hitable*> list(n + 1);
+  list[0] = new Sphere(Vec3f(0.f, -1000.f, 0.f), 1000, new Lambertian(Vec3f(0.5f, 0.5f, 0.5f)));
+  int i = 1;
+  constexpr float random_offset = 0.9f;
+  constexpr float small_radius = 0.2f;
+  constexpr float large_radius = 1.0f;
+  auto rand_diffuse = []() { return drand48() * drand48(); };
+  auto rand_metal = []() { return 0.5f * (1 + drand48()); };
+
+  for (int a = -range; a < range; ++a) {
+    for (int b = -range; b < range; ++b) {
+      Vec3f center(a + random_offset * drand48(), small_radius, b + random_offset * drand48());
+      if ((center - Vec3f(4, small_radius, 0)).norm() < 0.9) {
+        continue;
+      }
+      float choose_material = drand48();
+      if (choose_material < 0.8f) {  // Diffuse.
+        auto fn = []() { return drand48() * drand48(); };
+        Vec3f random_color(rand_diffuse(), rand_diffuse(), rand_diffuse());
+        list[i++] = new Sphere(center, small_radius, new Lambertian(random_color));
+      } else if (choose_material > 0.95f) {  // Metal.
+        Vec3f random_color(rand_metal(), rand_metal(), rand_metal());
+        list[i++] = new Sphere(center, small_radius, new Metal(random_color, 0.5f * drand48()));
+      } else {  // Glass.
+        list[i++] = new Sphere(center, small_radius, new Dielectric(1.5, 0));
+      }
+    }
+  }
+  list[i++] = new Sphere(Vec3f(0, large_radius, 0), large_radius, new Dielectric(1.5, 0));
+  list[i++] = new Sphere(Vec3f(-4, large_radius, 0), large_radius, new Lambertian(Vec3f(0.4, 0.2, 0.1)));
+  list[i++] = new Sphere(Vec3f(4, large_radius, 0), large_radius, new Metal(Vec3f(0.7, 0.6, 0.5), 0.0));
+  list.resize(i);
+  return std::unique_ptr<Hitable>(new HitableList(list));
+}
+
 Vec3f GetColor(const Ray& ray, Hitable* world, int depth) {
   HitResult hit_result;
   if (world->ComputeHit(ray, kMinHitDistance, MAXFLOAT, &hit_result)) {
@@ -43,20 +82,29 @@ Vec3f GetColor(const Ray& ray, Hitable* world, int depth) {
   }
 }
 
-int main() {
-  int nx = 200;
-  int ny = 100;
-  int ns = 100;
-  Vec3f look_from(-1, 1, 0), look_to(0, 0, -1), look_up(0, 1, 0);
-  float focus_distance = (look_from - look_to).norm();
-  Camera camera(90, float(nx) / float(ny), 0.2, focus_distance);
+int main(int argc, char** argv) {
+  int nx = atoi(argv[1]);
+  int ny = atoi(argv[2]);
+  int ns = atoi(argv[3]);
+  int range = atoi(argv[4]);
+  float aperture = atof(argv[5]);
+
+  // Vec3f look_from(-1, 1, 0), look_to(0, 0, -1), look_up(0, 1, 0);
+  Vec3f look_from(8, 2, 2), look_to(0, -0.5, 0), look_up(0, 1, 0);
+  float focus_distance = (look_from - Vec3f(4, 1, 0)).norm();
+  Camera camera(45, float(nx) / float(ny), aperture, focus_distance);
   camera.SetLook(look_from, look_to, look_up);
   // camera.SetLook(Vec3f(0, 0, 0), Vec3f(0, 0, -1), Vec3f(0, 1, 0));
   
-  std::unique_ptr<Hitable> world = std::move(GetBasicScene());
+  std::unique_ptr<Hitable> world = std::move(GetDemoScene(range));
 
-  std::cout << "P3\n" << nx << " " << ny << "\n255\n";
+  int image[nx][ny][3];
+  // #pragma omp parallel for num_threads(4)
   for (int y = ny - 1; y >= 0; y--) {
+    if (y % 50 == 0) {
+      std::cout << "Current row: " << y << std::endl;
+    }
+    #pragma omp parallel for num_threads(4)
     for (int x = 0; x < nx; x++) {
       Vec3f color(0, 0, 0);
       if (ns == 1) {
@@ -73,16 +121,25 @@ int main() {
         }
         color /= float(ns);  
       }
+      // Gamma correction.
       color = color.cwiseSqrt();
-      
-      // Eigen::Vector3f color(float(x) / float(nx), float(y) / float(ny), 0.2);
-      // Ray ray(origin, lower_left_corner + u * horizontal + v * vertical);
       
       int ir = int(255.99 * color[0]);
       int ig = int(255.99 * color[1]);
       int ib = int(255.99 * color[2]);
-      std::cout << ir << " " << ig << " " << ib << "\n";  
+      image[x][y][0] = ir;
+      image[x][y][1] = ig;
+      image[x][y][2] = ib;
     }
   }
-
+  std::cout << "Writing file..." << std::endl;
+  std::ofstream myfile;
+  myfile.open ("image.ppm");
+  myfile << "P3\n" << nx << " " << ny << "\n255\n";
+  for (int y = ny - 1; y >= 0; y--) {
+    for (int x = 0; x < nx; x++) {
+      myfile << image[x][y][0] << " " << image[x][y][1] << " " << image[x][y][2] << "\n";
+    }
+  }
+  myfile.close();
 }

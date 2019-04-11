@@ -43,7 +43,6 @@ class Camera {
     w_ = (look_from_ - look_to_).normalized();
     u_ = look_up_.cross(w_).normalized();
     v_ = w_.cross(u_);
-    look_from_ = look_from_;
     lower_left_corner_ = look_from_ - half_width * focus_distance_ * u_
         - half_height * focus_distance_ * v_ - focus_distance_ * w_;
     horizontal_ = 2 * half_width * focus_distance_ * u_;
